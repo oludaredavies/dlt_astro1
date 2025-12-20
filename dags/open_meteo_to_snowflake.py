@@ -118,28 +118,26 @@ def open_meteo_to_snowflake():
         import os
 
         # Get Snowflake connection details from snowflake_cosmos_demo connection
-        from airflow.providers.snowflake.hooks.snowflake import SnowflakeHook
+        from airflow.sdk.bases.hook import BaseHook
 
-        hook = SnowflakeHook(snowflake_conn_id="snowflake_cosmos_demo")
-        conn_params = hook._get_conn_params()
+        conn = BaseHook.get_connection("snowflake_cosmos_demo")
+        extra = conn.extra_dejson
 
         # Set credentials via environment variables for dlt
-        os.environ["DESTINATION__SNOWFLAKE__CREDENTIALS__DATABASE"] = "DEMO"
-        os.environ["DESTINATION__SNOWFLAKE__CREDENTIALS__PASSWORD"] = conn_params.get(
-            "password", ""
+        os.environ["DESTINATION__SNOWFLAKE__CREDENTIALS__DATABASE"] = extra.get(
+            "database", "DEMO"
         )
-        os.environ["DESTINATION__SNOWFLAKE__CREDENTIALS__USERNAME"] = conn_params.get(
-            "user", ""
+        os.environ["DESTINATION__SNOWFLAKE__CREDENTIALS__PASSWORD"] = (
+            conn.password or ""
         )
-        os.environ["DESTINATION__SNOWFLAKE__CREDENTIALS__HOST"] = conn_params.get(
+        os.environ["DESTINATION__SNOWFLAKE__CREDENTIALS__USERNAME"] = conn.login or ""
+        os.environ["DESTINATION__SNOWFLAKE__CREDENTIALS__HOST"] = extra.get(
             "account", ""
         )
-        os.environ["DESTINATION__SNOWFLAKE__CREDENTIALS__WAREHOUSE"] = conn_params.get(
+        os.environ["DESTINATION__SNOWFLAKE__CREDENTIALS__WAREHOUSE"] = extra.get(
             "warehouse", ""
         )
-        os.environ["DESTINATION__SNOWFLAKE__CREDENTIALS__ROLE"] = conn_params.get(
-            "role", ""
-        )
+        os.environ["DESTINATION__SNOWFLAKE__CREDENTIALS__ROLE"] = extra.get("role", "")
 
         # Configure dlt pipeline for Snowflake
         pipeline = dlt.pipeline(
