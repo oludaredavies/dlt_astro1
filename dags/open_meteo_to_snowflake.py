@@ -94,6 +94,11 @@ def open_meteo_to_snowflake():
         extra = conn.extra_dejson
 
         # Set credentials via environment variables for dlt
+        # Extract account identifier and remove .snowflakecomputing.com if present
+        account = extra.get("account", "")
+        if ".snowflakecomputing.com" in account:
+            account = account.replace(".snowflakecomputing.com", "")
+
         os.environ["DESTINATION__SNOWFLAKE__CREDENTIALS__DATABASE"] = extra.get(
             "database", "DEMO"
         )
@@ -101,9 +106,7 @@ def open_meteo_to_snowflake():
             conn.password or ""
         )
         os.environ["DESTINATION__SNOWFLAKE__CREDENTIALS__USERNAME"] = conn.login or ""
-        os.environ["DESTINATION__SNOWFLAKE__CREDENTIALS__HOST"] = extra.get(
-            "account", ""
-        )
+        os.environ["DESTINATION__SNOWFLAKE__CREDENTIALS__ACCOUNT"] = account
         os.environ["DESTINATION__SNOWFLAKE__CREDENTIALS__WAREHOUSE"] = extra.get(
             "warehouse", ""
         )
