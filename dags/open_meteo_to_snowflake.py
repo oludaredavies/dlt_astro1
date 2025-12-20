@@ -94,17 +94,16 @@ def open_meteo_to_snowflake():
         # Configure dlt pipeline for Snowflake
         pipeline = dlt.pipeline(
             pipeline_name="open_meteo_weather",
-            destination=dlt.destinations.snowflake(
-                credentials={
-                    "database": conn_params.get("database", "DEMO"),
-                    "password": conn_params.get("password"),
-                    "username": conn_params.get("user"),
-                    "host": conn_params.get("account"),
-                    "warehouse": conn_params.get("warehouse"),
-                    "role": conn_params.get("role"),
-                }
-            ),
+            destination="snowflake",
             dataset_name="DAVIES",  # This will be the schema in Snowflake
+            credentials={
+                "database": conn_params.get("database", "DEMO"),
+                "password": conn_params.get("password"),
+                "username": conn_params.get("user"),
+                "host": conn_params.get("account"),
+                "warehouse": conn_params.get("warehouse"),
+                "role": conn_params.get("role"),
+            },
         )
 
         # Load data - dlt will create table WEATHERDATA if it doesn't exist
