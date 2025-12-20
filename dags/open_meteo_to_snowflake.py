@@ -5,9 +5,9 @@ This DAG ingests weather data from the Open Meteo API every 5 seconds
 and loads it into Snowflake using dlt (data load tool).
 
 The pipeline:
-1. Fetches current weather data from Open Meteo API for a configurable location
-2. Uses dlt to automatically handle schema creation and data loading
-3. Loads data into DEMO.DAVIES.WEATHERDATA in Snowflake
+1. Fetches current weather data from Open Meteo API for Berlin, Germany
+2. Uses dlt to automatically infer schema and create/update table
+3. Loads data into DEMO.DAVIES schema in Snowflake
 """
 
 from airflow.sdk import dag, task
@@ -20,7 +20,7 @@ import dlt
 # DAG configuration - runs every 5 seconds
 @dag(
     start_date=datetime(2025, 1, 1),
-    schedule=timedelta(minutes=5),
+    schedule=timedelta(seconds=5),
     catchup=False,
     doc_md=__doc__,
     default_args={"owner": "Astro", "retries": 2},
@@ -76,97 +76,66 @@ def open_meteo_to_snowflake():
         return weather_record
 
     @task
-    def create_table_if_not_exists():
-        """Create Snowflake table if it doesn't exist."""
-        from airflow.providers.snowflake.hooks.snowflake import SnowflakeHook
-
-        hook = SnowflakeHook(snowflake_conn_id="snowflake_cosmos_demo")
-
-        sql = """
-            CREATE TABLE IF NOT EXISTS DEMO.DAVIES.WEATHERDATA (
-                INGESTION_TIMESTAMP TIMESTAMP_NTZ DEFAULT CURRENT_TIMESTAMP(),
-                TIMESTAMP VARCHAR(100),
-                LATITUDE FLOAT,
-                LONGITUDE FLOAT,
-                TIMEZONE VARCHAR(100),
-                TEMPERATURE_2M FLOAT,
-                RELATIVE_HUMIDITY_2M FLOAT,
-                APPARENT_TEMPERATURE FLOAT,
-                PRECIPITATION FLOAT,
-                WEATHER_CODE INT,
-                CLOUD_COVER FLOAT,
-                WIND_SPEED_10M FLOAT,
-                WIND_DIRECTION_10M FLOAT
-            );
-        """
-
-        hook.run(sql, autocommit=True)
-        return "Table created or already exists"
-
-    @task
-    def load_to_snowflake_with_dlt(weather_data: dict, table_status: str) -> dict:
+    def load_to_snowflake_with_dlt(weather_data: dict) -> dict:
         """
         Load weather data to Snowflake using dlt.
+        dlt automatically handles schema inference and table creation.
 
         Args:
             weather_data: Dictionary containing weather data
-            table_status: Status from table creation task (for dependency)
 
         Returns:
             Load information from dlt
         """
-        import os
+        from airflow.providers.snowflake.hooks.snowflake import SnowflakeHook
 
-        # Get Snowflake connection details from snowflake_cosmos_demo connection
-        from airflow.sdk.bases.hook import BaseHook
+        # Get Snowflake connection to extract credentials
+        hook = SnowflakeHook(snowflake_conn_id="snowflake_cosmos_demo")
 
-        conn = BaseHook.get_connection("snowflake_cosmos_demo")
-        extra = conn.extra_dejson
+        # Get the actual connection object to access credentials
+        sf_conn = hook.get_conn()
 
-        # Set credentials via environment variables for dlt
-        os.environ["DESTINATION__SNOWFLAKE__CREDENTIALS__DATABASE"] = extra.get(
-            "database", "DEMO"
-        )
-        os.environ["DESTINATION__SNOWFLAKE__CREDENTIALS__PASSWORD"] = (
-            conn.password or ""
-        )
-        os.environ["DESTINATION__SNOWFLAKE__CREDENTIALS__USERNAME"] = conn.login or ""
-        os.environ["DESTINATION__SNOWFLAKE__CREDENTIALS__HOST"] = extra.get(
-            "account", ""
-        )
-        os.environ["DESTINATION__SNOWFLAKE__CREDENTIALS__WAREHOUSE"] = extra.get(
-            "warehouse", ""
-        )
-        os.environ["DESTINATION__SNOWFLAKE__CREDENTIALS__ROLE"] = extra.get("role", "")
+        # Extract connection parameters from the active connection
+        account = sf_conn.account
+        user = sf_conn.user
+        password = sf_conn.password
+        warehouse = sf_conn.warehouse
+        database = sf_conn.database
+        role = sf_conn.role
 
-        # Configure dlt pipeline for Snowflake
+        # Configure dlt pipeline with explicit credentials
         pipeline = dlt.pipeline(
             pipeline_name="open_meteo_weather",
-            destination="snowflake",
-            dataset_name="DAVIES",  # This will be the schema in Snowflake
+            destination=dlt.destinations.snowflake(
+                credentials={
+                    "database": database or "DEMO",
+                    "password": password,
+                    "username": user,
+                    "host": account,
+                    "warehouse": warehouse,
+                    "role": role,
+                }
+            ),
+            dataset_name="DAVIES",
         )
 
-        # Load data - dlt will append to existing table WEATHERDATA
+        # Load data - dlt will automatically create table and infer schema
         load_info = pipeline.run(
             [weather_data],
             table_name="WEATHERDATA",
-            write_disposition="append",  # Append new records to existing table
+            write_disposition="append",
         )
 
-        # Return summary of the load
         return {
             "dataset_name": load_info.dataset_name,
-            "destination_name": load_info.destination.destination_name,
-            "destination_type": load_info.destination.destination_type,
             "first_run": load_info.first_run,
             "started_at": str(load_info.started_at),
             "finished_at": str(load_info.finished_at),
         }
 
     # Define task dependencies
-    table_status = create_table_if_not_exists()
     weather_data = extract_weather_data()
-    load_to_snowflake_with_dlt(weather_data, table_status)
+    load_to_snowflake_with_dlt(weather_data)
 
 
 # Instantiate the DAG
