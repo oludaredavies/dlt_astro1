@@ -106,7 +106,7 @@ def open_meteo_to_snowflake():
             conn.password or ""
         )
         os.environ["DESTINATION__SNOWFLAKE__CREDENTIALS__USERNAME"] = conn.login or ""
-        os.environ["DESTINATION__SNOWFLAKE__CREDENTIALS__ACCOUNT"] = account
+        os.environ["DESTINATION__SNOWFLAKE__CREDENTIALS__HOST"] = account
         os.environ["DESTINATION__SNOWFLAKE__CREDENTIALS__WAREHOUSE"] = extra.get(
             "warehouse", ""
         )
