@@ -87,24 +87,33 @@ def open_meteo_to_snowflake():
             Load information from dlt
         """
         # Get Snowflake connection details from Airflow connection
-        from airflow.hooks.base import BaseHook
+        from airflow.sdk.bases.hook import BaseHook
+        import os
 
         conn = BaseHook.get_connection("snowflake")
         extra = conn.extra_dejson
+
+        # Set credentials via environment variables for dlt
+        os.environ["DESTINATION__SNOWFLAKE__CREDENTIALS__DATABASE"] = extra.get(
+            "database", "DEMO"
+        )
+        os.environ["DESTINATION__SNOWFLAKE__CREDENTIALS__PASSWORD"] = (
+            conn.password or ""
+        )
+        os.environ["DESTINATION__SNOWFLAKE__CREDENTIALS__USERNAME"] = conn.login or ""
+        os.environ["DESTINATION__SNOWFLAKE__CREDENTIALS__HOST"] = extra.get(
+            "account", ""
+        )
+        os.environ["DESTINATION__SNOWFLAKE__CREDENTIALS__WAREHOUSE"] = extra.get(
+            "warehouse", ""
+        )
+        os.environ["DESTINATION__SNOWFLAKE__CREDENTIALS__ROLE"] = extra.get("role", "")
 
         # Configure dlt pipeline for Snowflake
         pipeline = dlt.pipeline(
             pipeline_name="open_meteo_weather",
             destination="snowflake",
             dataset_name="DAVIES",  # This will be the schema in Snowflake
-            credentials={
-                "database": extra.get("database", "DEMO"),
-                "password": conn.password,
-                "username": conn.login,
-                "host": extra.get("account"),
-                "warehouse": extra.get("warehouse"),
-                "role": extra.get("role"),
-            },
         )
 
         # Load data - dlt will create table WEATHERDATA if it doesn't exist
