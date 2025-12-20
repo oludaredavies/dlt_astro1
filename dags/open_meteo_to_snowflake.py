@@ -11,7 +11,6 @@ The pipeline:
 """
 
 from airflow.sdk import dag, task
-from airflow.providers.snowflake.hooks.snowflake import SnowflakeHook
 from pendulum import datetime
 from datetime import timedelta
 import requests
@@ -21,8 +20,7 @@ import dlt
 # DAG configuration - runs every 5 seconds
 @dag(
     start_date=datetime(2025, 1, 1),
-    """schedule=timedelta(seconds=5),"""
-    schedule=daily,
+    schedule=timedelta(seconds=5),
     catchup=False,
     doc_md=__doc__,
     default_args={"owner": "Astro", "retries": 2},
@@ -89,8 +87,10 @@ def open_meteo_to_snowflake():
             Load information from dlt
         """
         # Get Snowflake connection details from Airflow connection
-        hook = SnowflakeHook(snowflake_conn_id="snowflake")
-        conn_params = hook._get_conn_params()
+        from airflow.hooks.base import BaseHook
+
+        conn = BaseHook.get_connection("snowflake")
+        extra = conn.extra_dejson
 
         # Configure dlt pipeline for Snowflake
         pipeline = dlt.pipeline(
@@ -98,12 +98,12 @@ def open_meteo_to_snowflake():
             destination="snowflake",
             dataset_name="DAVIES",  # This will be the schema in Snowflake
             credentials={
-                "database": conn_params.get("database", "DEMO"),
-                "password": conn_params.get("password"),
-                "username": conn_params.get("user"),
-                "host": conn_params.get("account"),
-                "warehouse": conn_params.get("warehouse"),
-                "role": conn_params.get("role"),
+                "database": extra.get("database", "DEMO"),
+                "password": conn.password,
+                "username": conn.login,
+                "host": extra.get("account"),
+                "warehouse": extra.get("warehouse"),
+                "role": extra.get("role"),
             },
         )
 
