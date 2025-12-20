@@ -20,7 +20,7 @@ import dlt
 # DAG configuration - runs every 5 seconds
 @dag(
     start_date=datetime(2025, 1, 1),
-    schedule=timedelta(seconds=5),
+    schedule=timedelta(minutes=5),
     catchup=False,
     doc_md=__doc__,
     default_args={"owner": "Astro", "retries": 2},
