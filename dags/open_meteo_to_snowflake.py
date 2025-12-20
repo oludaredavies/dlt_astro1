@@ -88,32 +88,31 @@ def open_meteo_to_snowflake():
             Load information from dlt
         """
         from airflow.providers.snowflake.hooks.snowflake import SnowflakeHook
+        from airflow.sdk.bases.hook import BaseHook
 
-        # Get Snowflake connection to extract credentials
+        # Get Snowflake connection metadata from Airflow
+        conn = BaseHook.get_connection("snowflake_cosmos_demo")
+        extra = conn.extra_dejson
+
+        # Also get active connection to get properly formatted account
         hook = SnowflakeHook(snowflake_conn_id="snowflake_cosmos_demo")
-
-        # Get the actual connection object to access credentials
         sf_conn = hook.get_conn()
 
-        # Extract connection parameters from the active connection
+        # Use account from active connection (properly formatted)
+        # Use other credentials from Airflow connection
         account = sf_conn.account
-        user = sf_conn.user
-        password = sf_conn.password
-        warehouse = sf_conn.warehouse
-        database = sf_conn.database
-        role = sf_conn.role
 
         # Configure dlt pipeline with explicit credentials
         pipeline = dlt.pipeline(
             pipeline_name="open_meteo_weather",
             destination=dlt.destinations.snowflake(
                 credentials={
-                    "database": database or "DEMO",
-                    "password": password,
-                    "username": user,
+                    "database": extra.get("database", "DEMO"),
+                    "password": conn.password,
+                    "username": conn.login,
                     "host": account,
-                    "warehouse": warehouse,
-                    "role": role,
+                    "warehouse": extra.get("warehouse"),
+                    "role": extra.get("role"),
                 }
             ),
             dataset_name="DAVIES",
