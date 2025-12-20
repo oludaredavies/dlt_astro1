@@ -12,8 +12,6 @@ from pendulum import datetime
 from datetime import timedelta
 import requests
 import dlt
-import hashlib
-import json
 
 
 @dag(
@@ -49,7 +47,7 @@ def open_meteo_to_postgres_dlt():
             data = response.json()
 
             # Yield weather record - dlt will infer schema from this
-            weather_record = {
+            yield {
                 "latitude": data.get("latitude"),
                 "longitude": data.get("longitude"),
                 "time": data["current"]["time"],
@@ -61,12 +59,6 @@ def open_meteo_to_postgres_dlt():
                 "timezone_abbreviation": data.get("timezone_abbreviation"),
                 "elevation": data.get("elevation"),
             }
-
-            # Add CDC hash
-            hash_data = json.dumps(weather_record, sort_keys=True)
-            weather_record["data_hash"] = hashlib.sha256(hash_data.encode()).hexdigest()
-
-            yield weather_record
 
         # Get PostgreSQL connection
         conn = BaseHook.get_connection("davies_rds_virgina")
