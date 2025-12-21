@@ -1,0 +1,27 @@
+# New York Weather Pipeline
+# This YAML file creates a DAG that ingests weather data for New York
+# into PostgreSQL every 15 minutes.
+
+blueprint: open_meteo_postgres
+
+# Required: Unique DAG identifier
+job_id: newyork_weather
+
+# Location coordinates (New York City, USA)
+latitude: 40.71
+longitude: -74.01
+
+# Schedule: every 15 minutes
+schedule: "*/5 * * * *"
+
+# Airflow connection ID for your PostgreSQL database
+postgres_conn_id: davies_rds_virgina
+
+# Target table and schema in PostgreSQL
+table_name: newyork_weather
+schema_name: weather
+
+# Optional: DAG metadata
+owner: data-team
+retries: 3
+

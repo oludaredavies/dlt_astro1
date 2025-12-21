@@ -1,0 +1,79 @@
+# =============================================================================
+# WEATHER PIPELINE TEMPLATE
+# =============================================================================
+# Copy this file and rename it to create a new weather pipeline.
+# Example: cp _TEMPLATE.dag.yaml tokyo_weather.dag.yaml
+#
+# Then uncomment and customize the options below.
+# =============================================================================
+
+blueprint: open_meteo_postgres
+
+# -----------------------------------------------------------------------------
+# REQUIRED: Give your pipeline a unique name
+# -----------------------------------------------------------------------------
+job_id: my_city_weather
+
+# -----------------------------------------------------------------------------
+# LOCATION: Set the coordinates for your city
+# Find coordinates: https://www.latlong.net/
+# -----------------------------------------------------------------------------
+latitude: 52.52      # Range: -90 to 90
+longitude: 13.41     # Range: -180 to 180
+
+# -----------------------------------------------------------------------------
+# SCHEDULE: How often to fetch weather data
+# -----------------------------------------------------------------------------
+# Options:
+#   - "*/5 * * * *"   = Every 5 minutes
+#   - "*/15 * * * *"  = Every 15 minutes
+#   - "@hourly"       = Every hour
+#   - "@daily"        = Once per day at midnight
+#   - "0 */6 * * *"   = Every 6 hours
+schedule: "*/5 * * * *"
+
+# -----------------------------------------------------------------------------
+# METRICS: Choose which weather data to ingest
+# -----------------------------------------------------------------------------
+# Uncomment the metrics you want. Delete or keep commented the ones you don't.
+# At least one metric is required.
+#
+metrics:
+  # ── Temperature ────────────────────────────────────────────────────────────
+  - temperature_2m           # Air temperature at 2m height (°C)
+  # - apparent_temperature   # Feels-like temperature (°C)
+
+  # ── Humidity & Precipitation ───────────────────────────────────────────────
+  - relative_humidity_2m     # Relative humidity at 2m (%)
+  # - precipitation          # Total precipitation (mm)
+  # - rain                   # Rain amount (mm)
+  # - showers                # Showers amount (mm)
+  # - snowfall               # Snowfall amount (cm)
+
+  # ── Atmospheric ────────────────────────────────────────────────────────────
+  - weather_code             # WMO weather interpretation code
+  # - cloud_cover            # Total cloud cover (%)
+  # - pressure_msl           # Sea level pressure (hPa)
+  # - surface_pressure       # Surface pressure (hPa)
+
+  # ── Wind ───────────────────────────────────────────────────────────────────
+  - wind_speed_10m           # Wind speed at 10m height (km/h)
+  # - wind_direction_10m     # Wind direction at 10m (degrees)
+  # - wind_gusts_10m         # Wind gusts at 10m (km/h)
+
+  # ── Other ──────────────────────────────────────────────────────────────────
+  # - is_day                 # 1 if day, 0 if night
+
+# -----------------------------------------------------------------------------
+# DATABASE: PostgreSQL connection settings
+# -----------------------------------------------------------------------------
+postgres_conn_id: davies_rds_virgina   # Your Airflow connection ID
+table_name: my_city_weather            # Table to create/update
+schema_name: weather                   # Schema (dataset) name
+
+# -----------------------------------------------------------------------------
+# OPTIONAL: DAG metadata
+# -----------------------------------------------------------------------------
+owner: data-team     # Shows in Airflow UI
+retries: 2           # Number of retries on failure (0-5)
+

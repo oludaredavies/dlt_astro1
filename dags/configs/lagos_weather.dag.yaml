@@ -1,0 +1,38 @@
+# Lagos Weather Pipeline
+# Ingests comprehensive weather data for Lagos, Nigeria
+
+blueprint: open_meteo_postgres
+
+job_id: lagos_weather
+
+# Lagos, Nigeria coordinates
+latitude: 6.52
+longitude: 3.38
+
+schedule: "*/5 * * * *"
+
+# Metrics to ingest (customize as needed)
+metrics:
+  # Temperature
+  - temperature_2m
+  - apparent_temperature      # Feels-like temp (important for tropical climate!)
+  
+  # Humidity & Precipitation
+  - relative_humidity_2m
+  - precipitation             # Track rainfall
+  - rain
+  
+  # Atmospheric
+  - weather_code
+  # - cloud_cover           # Commented out - not ingesting this
+  
+  # Wind
+  - wind_speed_10m
+  - wind_direction_10m
+
+postgres_conn_id: davies_rds_virgina
+table_name: lagos_weather
+schema_name: weather
+
+owner: data-team
+retries: 2

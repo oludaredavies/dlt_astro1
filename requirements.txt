@@ -3,3 +3,4 @@ dlt[snowflake,postgres]>=0.4.0
 requests>=2.31.0
 apache-airflow-providers-snowflake>=5.0.0
 apache-airflow-providers-postgres>=5.0.0
+airflow-blueprint

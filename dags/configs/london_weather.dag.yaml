@@ -1,0 +1,27 @@
+# London Weather Pipeline
+# This YAML file creates a DAG that ingests weather data for London
+# into PostgreSQL every hour.
+
+blueprint: open_meteo_postgres
+
+# Required: Unique DAG identifier
+job_id: london_weather
+
+# Location coordinates (London, UK)
+latitude: 51.51
+longitude: -0.13
+
+# Schedule: every hour
+schedule: "@hourly"
+
+# Airflow connection ID for your PostgreSQL database
+postgres_conn_id: davies_rds_virgina
+
+# Target table and schema in PostgreSQL
+table_name: london_weather
+schema_name: weather
+
+# Optional: DAG metadata
+owner: data-team
+retries: 2
+

@@ -1,45 +1,241 @@
-Overview
-========
+# Weather Data Pipelines with Airflow + dlt
 
-Welcome to Astronomer! This project was generated after you ran 'astro dev init' using the Astronomer CLI. This readme describes the contents of the project, as well as how to run Apache Airflow on your local machine.
+Ingest weather data from [Open Meteo API](https://open-meteo.com/) into PostgreSQL using Apache Airflow and [dlt](https://dlthub.com/).
 
-Project Contents
-================
+**No Python required!** Create new weather pipelines by simply adding a YAML file.
 
-Your Astro project contains the following files and folders:
+---
 
-- dags: This folder contains the Python files for your Airflow DAGs. By default, this directory includes one example DAG:
-    - `example_astronauts`: This DAG shows a simple ETL pipeline example that queries the list of astronauts currently in space from the Open Notify API and prints a statement for each astronaut. The DAG uses the TaskFlow API to define tasks in Python, and dynamic task mapping to dynamically print a statement for each astronaut. For more on how this DAG works, see our [Getting started tutorial](https://www.astronomer.io/docs/learn/get-started-with-airflow).
-- Dockerfile: This file contains a versioned Astro Runtime Docker image that provides a differentiated Airflow experience. If you want to execute other commands or overrides at runtime, specify them here.
-- include: This folder contains any additional files that you want to include as part of your project. It is empty by default.
-- packages.txt: Install OS-level packages needed for your project by adding them to this file. It is empty by default.
-- requirements.txt: Install Python packages needed for your project by adding them to this file. It is empty by default.
-- plugins: Add custom or community plugins for your project to this file. It is empty by default.
-- airflow_settings.yaml: Use this local-only file to specify Airflow Connections, Variables, and Pools instead of entering them in the Airflow UI as you develop DAGs in this project.
+## 🚀 Quick Start
 
-Deploy Your Project Locally
-===========================
+### 1. Start Airflow
 
-Start Airflow on your local machine by running 'astro dev start'.
+```bash
+astro dev start
+```
 
-This command will spin up five Docker containers on your machine, each for a different Airflow component:
+Open http://localhost:8080 (username: `admin`, password: `admin`)
 
-- Postgres: Airflow's Metadata Database
-- Scheduler: The Airflow component responsible for monitoring and triggering tasks
-- DAG Processor: The Airflow component responsible for parsing DAGs
-- API Server: The Airflow component responsible for serving the Airflow UI and API
-- Triggerer: The Airflow component responsible for triggering deferred tasks
+### 2. Create a New Weather Pipeline
 
-When all five containers are ready the command will open the browser to the Airflow UI at http://localhost:8080/. You should also be able to access your Postgres Database at 'localhost:5432/postgres' with username 'postgres' and password 'postgres'.
+Copy the template and customize it:
 
-Note: If you already have either of the above ports allocated, you can either [stop your existing Docker containers or change the port](https://www.astronomer.io/docs/astro/cli/troubleshoot-locally#ports-are-not-available-for-my-local-airflow-webserver).
+```bash
+cp dags/configs/_TEMPLATE.dag.yaml dags/configs/tokyo_weather.dag.yaml
+```
 
-Deploy Your Project to Astronomer
-=================================
+Edit the file with your city's coordinates and desired metrics. That's it! The DAG appears automatically in Airflow.
 
-If you have an Astronomer account, pushing code to a Deployment on Astronomer is simple. For deploying instructions, refer to Astronomer documentation: https://www.astronomer.io/docs/astro/deploy-code/
+---
 
-Contact
-=======
+## 📁 Project Structure
 
-The Astronomer CLI is maintained with love by the Astronomer team. To report a bug or suggest a change, reach out to our support.
+```
+dlt_astro1/
+├── .astro/
+│   └── templates/
+│       └── open_meteo_postgres.py   # Blueprint template (don't edit unless extending)
+├── dags/
+│   ├── configs/                      # ⭐ Add your YAML files here
+│   │   ├── _TEMPLATE.dag.yaml        # Copy this to create new pipelines
+│   │   ├── berlin_weather.dag.yaml
+│   │   ├── lagos_weather.dag.yaml
+│   │   └── ...
+│   └── load_blueprints.py            # Auto-discovers YAML configs
+├── requirements.txt
+└── README.md
+```
+
+---
+
+## 📝 Creating a New DAG
+
+### Step 1: Copy the Template
+
+```bash
+cp dags/configs/_TEMPLATE.dag.yaml dags/configs/my_city_weather.dag.yaml
+```
+
+### Step 2: Edit the YAML File
+
+```yaml
+blueprint: open_meteo_postgres
+
+# Required: Unique name for your DAG
+job_id: paris_weather
+
+# Your city's coordinates (find at https://www.latlong.net/)
+latitude: 48.85
+longitude: 2.35
+
+# How often to fetch data
+schedule: "@hourly"
+
+# Which weather metrics to ingest (uncomment what you need)
+metrics:
+  - temperature_2m
+  - relative_humidity_2m
+  - wind_speed_10m
+  - precipitation
+  # - apparent_temperature
+  # - cloud_cover
+  # ... see template for all options
+
+# PostgreSQL connection
+postgres_conn_id: my_postgres_connection
+table_name: paris_weather
+schema_name: weather
+```
+
+### Step 3: Done!
+
+Airflow automatically discovers the new file and creates the DAG. Refresh the UI to see it.
+
+---
+
+## 🌡️ Available Metrics
+
+Choose any combination of these metrics in your YAML:
+
+| Category | Metric | Description |
+|----------|--------|-------------|
+| **Temperature** | `temperature_2m` | Air temperature at 2m (°C) |
+| | `apparent_temperature` | Feels-like temperature (°C) |
+| **Humidity** | `relative_humidity_2m` | Relative humidity (%) |
+| **Precipitation** | `precipitation` | Total precipitation (mm) |
+| | `rain` | Rain amount (mm) |
+| | `showers` | Showers amount (mm) |
+| | `snowfall` | Snowfall amount (cm) |
+| **Atmospheric** | `weather_code` | WMO weather code |
+| | `cloud_cover` | Cloud cover (%) |
+| | `pressure_msl` | Sea level pressure (hPa) |
+| | `surface_pressure` | Surface pressure (hPa) |
+| **Wind** | `wind_speed_10m` | Wind speed at 10m (km/h) |
+| | `wind_direction_10m` | Wind direction (degrees) |
+| | `wind_gusts_10m` | Wind gusts (km/h) |
+| **Other** | `is_day` | 1 = day, 0 = night |
+
+---
+
+## ⏰ Schedule Options
+
+| Schedule | Meaning |
+|----------|---------|
+| `"*/5 * * * *"` | Every 5 minutes |
+| `"*/15 * * * *"` | Every 15 minutes |
+| `"@hourly"` | Every hour |
+| `"0 */6 * * *"` | Every 6 hours |
+| `"@daily"` | Once per day (midnight) |
+| `"@weekly"` | Once per week |
+
+---
+
+## 🗄️ Database Output
+
+Each pipeline creates a table in PostgreSQL with:
+
+- **Schema:** As specified in `schema_name` (default: `weather`)
+- **Table:** As specified in `table_name`
+- **Columns:** `time`, `latitude`, `longitude`, `timezone`, + your selected metrics
+
+**Deduplication:** Uses `time + latitude + longitude` as primary key. Running the same pipeline multiple times won't create duplicates.
+
+---
+
+## 🔧 Configuration Reference
+
+| Field | Required | Default | Description |
+|-------|----------|---------|-------------|
+| `blueprint` | ✅ | - | Must be `open_meteo_postgres` |
+| `job_id` | ✅ | - | Unique DAG identifier |
+| `latitude` | ❌ | 52.52 | Location latitude (-90 to 90) |
+| `longitude` | ❌ | 13.41 | Location longitude (-180 to 180) |
+| `metrics` | ❌ | Basic set | List of metrics to ingest |
+| `schedule` | ❌ | `*/5 * * * *` | Cron expression or preset |
+| `postgres_conn_id` | ❌ | `postgres_default` | Airflow connection ID |
+| `table_name` | ❌ | `weather_data` | Target table name |
+| `schema_name` | ❌ | `weather` | Target schema name |
+| `owner` | ❌ | `data-team` | DAG owner |
+| `retries` | ❌ | 2 | Retries on failure (0-5) |
+
+---
+
+## 🛠️ Setting Up PostgreSQL Connection
+
+1. Go to Airflow UI → Admin → Connections
+2. Click "+" to add a new connection
+3. Fill in:
+   - **Connection Id:** `my_postgres_connection` (use this in your YAML)
+   - **Connection Type:** Postgres
+   - **Host:** Your database host
+   - **Schema:** Database name
+   - **Login:** Username
+   - **Password:** Password
+   - **Port:** 5432
+
+---
+
+## 📚 Examples
+
+### Minimal Config
+
+```yaml
+blueprint: open_meteo_postgres
+job_id: simple_weather
+postgres_conn_id: my_postgres
+```
+
+### Full Config
+
+```yaml
+blueprint: open_meteo_postgres
+job_id: comprehensive_weather
+latitude: 35.68
+longitude: 139.69
+schedule: "@hourly"
+metrics:
+  - temperature_2m
+  - apparent_temperature
+  - relative_humidity_2m
+  - precipitation
+  - rain
+  - weather_code
+  - cloud_cover
+  - wind_speed_10m
+  - wind_direction_10m
+  - wind_gusts_10m
+  - pressure_msl
+postgres_conn_id: production_postgres
+table_name: tokyo_weather
+schema_name: weather_data
+owner: analytics-team
+retries: 3
+```
+
+---
+
+## 🔗 Resources
+
+- [Open Meteo API Docs](https://open-meteo.com/en/docs)
+- [dlt Documentation](https://dlthub.com/docs)
+- [Astronomer Blueprint](https://github.com/astronomer/blueprint)
+- [Airflow Documentation](https://airflow.apache.org/docs/)
+
+---
+
+## 💡 Tips
+
+- **Find coordinates:** Use [latlong.net](https://www.latlong.net/) to find any city's coordinates
+- **Test locally:** Run `astro dev start` to test before deploying
+- **Check logs:** If a DAG fails, check the task logs in Airflow UI
+- **Validate YAML:** Make sure your YAML syntax is correct (proper indentation, no tabs)
+
+---
+
+## 🚀 Deploy to Production
+
+```bash
+astro deploy
+```
+
+See [Astronomer docs](https://www.astronomer.io/docs/astro/deploy-code/) for deployment instructions.

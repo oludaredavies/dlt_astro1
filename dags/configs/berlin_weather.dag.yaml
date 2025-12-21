@@ -1,0 +1,27 @@
+# Berlin Weather Pipeline
+# This YAML file creates a DAG that ingests weather data for Berlin
+# into PostgreSQL every 5 minutes.
+
+blueprint: open_meteo_postgres
+
+# Required: Unique DAG identifier
+job_id: berlin_weather
+
+# Location coordinates (Berlin, Germany)
+latitude: 52.52
+longitude: 13.41
+
+# Schedule: every 5 minutes
+schedule: "*/5 * * * *"
+
+# Airflow connection ID for your PostgreSQL database
+postgres_conn_id: davies_rds_virgina
+
+# Target table and schema in PostgreSQL
+table_name: berlin_weather
+schema_name: weather
+
+# Optional: DAG metadata
+owner: data-team
+retries: 2
+
