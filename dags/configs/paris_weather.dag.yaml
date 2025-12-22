@@ -1,0 +1,28 @@
+# Paris Weather Pipeline
+# Ingests weather data for Paris, France
+
+blueprint: open_meteo_postgres
+
+job_id: paris_weather
+
+# Paris, France coordinates
+latitude: 48.85
+longitude: 2.35
+
+schedule: "*/5 * * * *"
+
+# Metrics to ingest
+metrics:
+  - temperature_2m
+  - apparent_temperature
+  - relative_humidity_2m
+  - weather_code
+  - wind_speed_10m
+
+postgres_conn_id: davies_rds_virgina
+table_name: paris_weather
+schema_name: weather
+
+owner: data-team
+retries: 2
+
