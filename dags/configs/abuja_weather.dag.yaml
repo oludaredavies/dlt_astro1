@@ -1,13 +1,13 @@
-# Montreal Weather Pipeline
-# Ingests weather data for Montreal, Canada
+# Abuja Weather Pipeline
+# Ingests weather data for Abuja, Nigeria (Capital City)
 
 blueprint: open_meteo_postgres
 
-job_id: montreal_weather
+job_id: abuja_weather
 
-# Montreal, Canada coordinates
-latitude: 45.50
-longitude: -73.57
+# Abuja, Nigeria coordinates
+latitude: 9.08
+longitude: 7.40
 
 schedule: "*/5 * * * *"
 
@@ -16,19 +16,21 @@ metrics:
   - temperature_2m
   - apparent_temperature
   - relative_humidity_2m
-  - snowfall              # Important for Canadian winters!
+  - precipitation
+  - rain
   - weather_code
   - wind_speed_10m
-  - wind_gusts_10m
+  - wind_direction_10m
 
 postgres_conn_id: davies_rds_virgina
-table_name: montreal_weather
+table_name: abuja_weather
 schema_name: weather
 
 # Tags for filtering
 tags:
-  - canada
-  - americas
+  - nigeria
+  - emea
 
 owner: data-team
 retries: 2
+

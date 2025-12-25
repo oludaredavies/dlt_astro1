@@ -1,13 +1,13 @@
-# Montreal Weather Pipeline
-# Ingests weather data for Montreal, Canada
+# Los Angeles Weather Pipeline
+# Ingests weather data for Los Angeles, USA
 
 blueprint: open_meteo_postgres
 
-job_id: montreal_weather
+job_id: losangeles_weather
 
-# Montreal, Canada coordinates
-latitude: 45.50
-longitude: -73.57
+# Los Angeles, USA coordinates
+latitude: 34.05
+longitude: -118.24
 
 schedule: "*/5 * * * *"
 
@@ -16,19 +16,20 @@ metrics:
   - temperature_2m
   - apparent_temperature
   - relative_humidity_2m
-  - snowfall              # Important for Canadian winters!
+  - precipitation
   - weather_code
   - wind_speed_10m
-  - wind_gusts_10m
+  - cloud_cover
 
 postgres_conn_id: davies_rds_virgina
-table_name: montreal_weather
+table_name: losangeles_weather
 schema_name: weather
 
 # Tags for filtering
 tags:
-  - canada
+  - usa
   - americas
 
 owner: data-team
-retries: 2
+retries: 3
+

@@ -125,6 +125,11 @@ class OpenMeteoConfig(BaseModel):
         le=5,
         description="Number of task retries on failure (0-5)"
     )
+    
+    tags: List[str] = Field(
+        default=[],
+        description="Custom tags for filtering DAGs (e.g., country, region)"
+    )
 
 
 class OpenMeteoPostgres(Blueprint[OpenMeteoConfig]):
@@ -231,6 +236,9 @@ class OpenMeteoPostgres(Blueprint[OpenMeteoConfig]):
         # Build and return the DAG
         metrics_doc = "\n".join([f"  - {m}" for m in config.metrics])
         
+        # Combine default tags with user-specified tags
+        all_tags = ["weather", "dlt", "open-meteo"] + config.tags
+        
         with DAG(
             dag_id=config.job_id,
             start_date=datetime(2025, 1, 1),
@@ -240,7 +248,7 @@ class OpenMeteoPostgres(Blueprint[OpenMeteoConfig]):
                 "owner": config.owner,
                 "retries": config.retries,
             },
-            tags=["weather", "dlt", "blueprint", "open-meteo"],
+            tags=all_tags,
             doc_md=f"""
 ## {config.job_id}
 

@@ -34,5 +34,10 @@ postgres_conn_id: davies_rds_virgina
 table_name: lagos_weather
 schema_name: weather
 
+# Tags for filtering
+tags:
+  - nigeria
+  - emea
+
 owner: data-team
 retries: 2

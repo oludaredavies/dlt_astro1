@@ -1,13 +1,13 @@
-# Montreal Weather Pipeline
-# Ingests weather data for Montreal, Canada
+# Nice Weather Pipeline
+# Ingests weather data for Nice, France
 
 blueprint: open_meteo_postgres
 
-job_id: montreal_weather
+job_id: nice_weather
 
-# Montreal, Canada coordinates
-latitude: 45.50
-longitude: -73.57
+# Nice, France coordinates
+latitude: 43.71
+longitude: 7.26
 
 schedule: "*/5 * * * *"
 
@@ -16,19 +16,19 @@ metrics:
   - temperature_2m
   - apparent_temperature
   - relative_humidity_2m
-  - snowfall              # Important for Canadian winters!
+  - precipitation
   - weather_code
   - wind_speed_10m
-  - wind_gusts_10m
 
 postgres_conn_id: davies_rds_virgina
-table_name: montreal_weather
+table_name: nice_weather
 schema_name: weather
 
 # Tags for filtering
 tags:
-  - canada
-  - americas
+  - france
+  - emea
 
 owner: data-team
 retries: 2
+

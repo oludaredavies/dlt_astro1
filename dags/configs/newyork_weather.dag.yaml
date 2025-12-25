@@ -21,6 +21,11 @@ postgres_conn_id: davies_rds_virgina
 table_name: newyork_weather
 schema_name: weather
 
+# Tags for filtering
+tags:
+  - usa
+  - americas
+
 # Optional: DAG metadata
 owner: data-team
 retries: 3

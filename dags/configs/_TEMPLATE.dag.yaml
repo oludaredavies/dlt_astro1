@@ -72,6 +72,16 @@ table_name: my_city_weather            # Table to create/update
 schema_name: weather                   # Schema (dataset) name
 
 # -----------------------------------------------------------------------------
+# TAGS: For filtering DAGs in Airflow UI
+# -----------------------------------------------------------------------------
+# Add country and region tags to enable filtering
+# Available regions: emea, americas
+#
+tags:
+  - my_country       # Replace with: germany, nigeria, uk, canada, usa, france
+  - emea             # Or: americas
+
+# -----------------------------------------------------------------------------
 # OPTIONAL: DAG metadata
 # -----------------------------------------------------------------------------
 owner: data-team     # Shows in Airflow UI
