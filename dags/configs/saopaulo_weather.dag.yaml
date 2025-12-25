@@ -1,0 +1,40 @@
+# São Paulo Weather Pipeline (Long-Running)
+# Ingests weather data for São Paulo, Brazil
+
+blueprint: open_meteo_postgres
+
+job_id: saopaulo_weather
+
+# São Paulo, Brazil coordinates
+latitude: -23.55
+longitude: -46.63
+
+# Staggered schedule: runs at :06, :21, :36, :51
+schedule: "6-59/15 * * * *"
+
+# Long-running: 10 minutes total (5 min before + 5 min after load)
+delay_seconds: 600
+
+# Metrics to ingest
+metrics:
+  - temperature_2m
+  - apparent_temperature
+  - relative_humidity_2m
+  - precipitation
+  - rain
+  - weather_code
+  - wind_speed_10m
+
+postgres_conn_id: davies_rds_virgina
+table_name: saopaulo_weather
+schema_name: weather
+
+# Tags for filtering
+tags:
+  - brazil
+  - americas
+  - long-running
+
+owner: engineering
+retries: 2
+

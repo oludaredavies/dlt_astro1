@@ -1,0 +1,40 @@
+# Madrid Weather Pipeline (Long-Running)
+# Ingests weather data for Madrid, Spain
+
+blueprint: open_meteo_postgres
+
+job_id: madrid_weather
+
+# Madrid, Spain coordinates
+latitude: 40.42
+longitude: -3.70
+
+# Staggered schedule: runs at :09, :24, :39, :54
+schedule: "9-59/15 * * * *"
+
+# Long-running: 10 minutes total (5 min before + 5 min after load)
+delay_seconds: 600
+
+# Metrics to ingest
+metrics:
+  - temperature_2m
+  - apparent_temperature
+  - relative_humidity_2m
+  - precipitation
+  - weather_code
+  - wind_speed_10m
+  - cloud_cover
+
+postgres_conn_id: davies_rds_virgina
+table_name: madrid_weather
+schema_name: weather
+
+# Tags for filtering
+tags:
+  - spain
+  - emea
+  - long-running
+
+owner: ml-team
+retries: 2
+

@@ -1,0 +1,40 @@
+# Tokyo Weather Pipeline (Long-Running)
+# Ingests weather data for Tokyo, Japan
+
+blueprint: open_meteo_postgres
+
+job_id: tokyo_weather
+
+# Tokyo, Japan coordinates
+latitude: 35.68
+longitude: 139.69
+
+# Staggered schedule: runs at :00, :15, :30, :45
+schedule: "0 */15 * * *"
+
+# Long-running: 10 minutes total (5 min before + 5 min after load)
+delay_seconds: 600
+
+# Metrics to ingest
+metrics:
+  - temperature_2m
+  - apparent_temperature
+  - relative_humidity_2m
+  - precipitation
+  - weather_code
+  - wind_speed_10m
+  - pressure_msl
+
+postgres_conn_id: davies_rds_virgina
+table_name: tokyo_weather
+schema_name: weather
+
+# Tags for filtering
+tags:
+  - japan
+  - apac
+  - long-running
+
+owner: analytics-team
+retries: 2
+

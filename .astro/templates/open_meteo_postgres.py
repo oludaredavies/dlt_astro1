@@ -125,10 +125,17 @@ class OpenMeteoConfig(BaseModel):
         le=5,
         description="Number of task retries on failure (0-5)"
     )
-    
+
     tags: List[str] = Field(
         default=[],
         description="Custom tags for filtering DAGs (e.g., country, region)"
+    )
+    
+    delay_seconds: int = Field(
+        default=0,
+        ge=0,
+        le=1800,
+        description="Artificial delay in seconds for long-running DAGs (0-1800)"
     )
 
 
@@ -166,15 +173,26 @@ class OpenMeteoPostgres(Blueprint[OpenMeteoConfig]):
             schema: str,
             dag_id: str,
             metrics: List[str],
+            delay_seconds: int = 0,
         ):
             """
             Extract weather data from Open Meteo and load to PostgreSQL.
             
             Dynamically fetches only the metrics specified in the config.
+            If delay_seconds > 0, splits delay before and after data load.
             """
             import dlt
             import requests
+            import time
             from airflow.hooks.base import BaseHook
+            
+            # Split delay: half before, half after data load
+            delay_before = delay_seconds // 2
+            delay_after = delay_seconds - delay_before
+            
+            if delay_before > 0:
+                print(f"Pre-load delay: sleeping for {delay_before} seconds...")
+                time.sleep(delay_before)
             
             # Build the metrics string for the API request
             metrics_param = ",".join(metrics)
@@ -231,7 +249,12 @@ class OpenMeteoPostgres(Blueprint[OpenMeteoConfig]):
             
             print(f"Successfully loaded {len(metrics)} metrics: {metrics}")
             print(f"Load info: {load_info}")
-            return {"status": "success", "metrics_loaded": metrics}
+            
+            if delay_after > 0:
+                print(f"Post-load delay: sleeping for {delay_after} seconds...")
+                time.sleep(delay_after)
+            
+            return {"status": "success", "metrics_loaded": metrics, "total_delay": delay_seconds}
         
         # Build and return the DAG
         metrics_doc = "\n".join([f"  - {m}" for m in config.metrics])
@@ -272,6 +295,7 @@ Weather data pipeline for location ({config.latitude}, {config.longitude}).
                 schema=config.schema_name,
                 dag_id=config.job_id,
                 metrics=config.metrics,
+                delay_seconds=config.delay_seconds,
             )
         
         return dag

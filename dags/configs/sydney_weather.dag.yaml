@@ -1,0 +1,40 @@
+# Sydney Weather Pipeline (Long-Running)
+# Ingests weather data for Sydney, Australia
+
+blueprint: open_meteo_postgres
+
+job_id: sydney_weather
+
+# Sydney, Australia coordinates
+latitude: -33.87
+longitude: 151.21
+
+# Staggered schedule: runs at :03, :18, :33, :48
+schedule: "3-59/15 * * * *"
+
+# Long-running: 10 minutes total (5 min before + 5 min after load)
+delay_seconds: 600
+
+# Metrics to ingest
+metrics:
+  - temperature_2m
+  - apparent_temperature
+  - relative_humidity_2m
+  - precipitation
+  - weather_code
+  - wind_speed_10m
+  - cloud_cover
+
+postgres_conn_id: davies_rds_virgina
+table_name: sydney_weather
+schema_name: weather
+
+# Tags for filtering
+tags:
+  - australia
+  - apac
+  - long-running
+
+owner: platform-team
+retries: 2
+

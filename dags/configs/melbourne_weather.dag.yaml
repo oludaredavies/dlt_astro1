@@ -1,0 +1,40 @@
+# Melbourne Weather Pipeline (Long-Running)
+# Ingests weather data for Melbourne, Australia
+
+blueprint: open_meteo_postgres
+
+job_id: melbourne_weather
+
+# Melbourne, Australia coordinates
+latitude: -37.81
+longitude: 144.96
+
+# Staggered schedule: runs at :05, :20, :35, :50
+schedule: "5-59/15 * * * *"
+
+# Long-running: 10 minutes total (5 min before + 5 min after load)
+delay_seconds: 600
+
+# Metrics to ingest
+metrics:
+  - temperature_2m
+  - apparent_temperature
+  - relative_humidity_2m
+  - precipitation
+  - weather_code
+  - wind_speed_10m
+  - cloud_cover
+
+postgres_conn_id: davies_rds_virgina
+table_name: melbourne_weather
+schema_name: weather
+
+# Tags for filtering
+tags:
+  - australia
+  - apac
+  - long-running
+
+owner: devops-team
+retries: 2
+

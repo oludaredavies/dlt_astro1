@@ -1,0 +1,40 @@
+# Rio de Janeiro Weather Pipeline (Long-Running)
+# Ingests weather data for Rio de Janeiro, Brazil
+
+blueprint: open_meteo_postgres
+
+job_id: rio_weather
+
+# Rio de Janeiro, Brazil coordinates
+latitude: -22.91
+longitude: -43.17
+
+# Staggered schedule: runs at :08, :23, :38, :53
+schedule: "8-59/15 * * * *"
+
+# Long-running: 10 minutes total (5 min before + 5 min after load)
+delay_seconds: 600
+
+# Metrics to ingest
+metrics:
+  - temperature_2m
+  - apparent_temperature
+  - relative_humidity_2m
+  - precipitation
+  - rain
+  - weather_code
+  - wind_speed_10m
+
+postgres_conn_id: davies_rds_virgina
+table_name: rio_weather
+schema_name: weather
+
+# Tags for filtering
+tags:
+  - brazil
+  - americas
+  - long-running
+
+owner: analytics-team
+retries: 2
+

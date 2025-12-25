@@ -1,0 +1,40 @@
+# Mumbai Weather Pipeline (Long-Running)
+# Ingests weather data for Mumbai, India
+
+blueprint: open_meteo_postgres
+
+job_id: mumbai_weather
+
+# Mumbai, India coordinates
+latitude: 19.08
+longitude: 72.88
+
+# Staggered schedule: runs at :12, :27, :42, :57
+schedule: "12-59/15 * * * *"
+
+# Long-running: 10 minutes total (5 min before + 5 min after load)
+delay_seconds: 600
+
+# Metrics to ingest
+metrics:
+  - temperature_2m
+  - apparent_temperature
+  - relative_humidity_2m
+  - precipitation
+  - rain
+  - weather_code
+  - wind_speed_10m
+
+postgres_conn_id: davies_rds_virgina
+table_name: mumbai_weather
+schema_name: weather
+
+# Tags for filtering
+tags:
+  - india
+  - apac
+  - long-running
+
+owner: devops-team
+retries: 2
+

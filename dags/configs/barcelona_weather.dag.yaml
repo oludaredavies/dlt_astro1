@@ -1,0 +1,40 @@
+# Barcelona Weather Pipeline (Long-Running)
+# Ingests weather data for Barcelona, Spain
+
+blueprint: open_meteo_postgres
+
+job_id: barcelona_weather
+
+# Barcelona, Spain coordinates
+latitude: 41.39
+longitude: 2.17
+
+# Staggered schedule: runs at :11, :26, :41, :56
+schedule: "11-59/15 * * * *"
+
+# Long-running: 10 minutes total (5 min before + 5 min after load)
+delay_seconds: 600
+
+# Metrics to ingest
+metrics:
+  - temperature_2m
+  - apparent_temperature
+  - relative_humidity_2m
+  - precipitation
+  - weather_code
+  - wind_speed_10m
+  - cloud_cover
+
+postgres_conn_id: davies_rds_virgina
+table_name: barcelona_weather
+schema_name: weather
+
+# Tags for filtering
+tags:
+  - spain
+  - emea
+  - long-running
+
+owner: platform-team
+retries: 2
+
