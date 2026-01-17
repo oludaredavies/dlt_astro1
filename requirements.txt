@@ -4,3 +4,4 @@ requests>=2.31.0
 apache-airflow-providers-snowflake>=5.0.0
 apache-airflow-providers-postgres>=5.0.0
 airflow-blueprint
+astro-run-dag # This package is needed for the astro run command. It will be removed before a deploy
