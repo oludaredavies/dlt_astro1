@@ -1,2 +1,4 @@
 project:
     name: dlt-astro-1
+webserver:
+    port: "8081"
